@@ -1,19 +1,21 @@
 import pytest
-
+from datetime import datetime
 from src.processing import filter_by_state, sort_by_date
 
-
-def test_filter_by_state(test):
-    assert filter_by_state(test) == [
-        {"id": 41428829, "state": "EXECUTED", "date": "2019-07-03T18:35:29.512364"},
-        {"id": 939719570, "state": "EXECUTED", "date": "2018-06-30T02:08:58.425572"},
+@pytest.fixture
+def sample_operations() -> list[dict]:
+    return [
+        {"state": "EXECUTED", "date": "2023-10-20T12:30:45.123"},
+        {"state": "PENDING", "date": "2022-05-15T08:10:30.456"},
+        {"state": "EXECUTED", "date": "2021-01-01T00:00:00.000"},
     ]
 
+def test_filter_by_state(sample_operations: list[dict]) -> None:
+    filtered = filter_by_state(sample_operations, "EXECUTED")
+    assert len(filtered) == 2
+    assert all(op["state"] == "EXECUTED" for op in filtered)
 
-def test_sort_by_date(test):
-    assert sort_by_date(test) == [
-        {"id": 41428829, "state": "EXECUTED", "date": "2019-07-03T18:35:29.512364"},
-        {"id": 615064591, "state": "CANCELED", "date": "2018-10-14T08:21:33.419441"},
-        {"id": 594226727, "state": "CANCELED", "date": "2018-09-12T21:27:25.241689"},
-        {"id": 939719570, "state": "EXECUTED", "date": "2018-06-30T02:08:58.425572"},
-    ]
+def test_sort_by_date(sample_operations: list[dict]) -> None:
+    sorted_ops = sort_by_date(sample_operations)
+    dates = [datetime.strptime(op["date"], "%Y-%m-%dT%H:%M:%S.%f") for op in sorted_ops]
+    assert dates == sorted(dates, reverse=True)

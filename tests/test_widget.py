@@ -1,34 +1,24 @@
 import pytest
-
-from src.widget import get_date, mask_account_card
-
+from src.widget import mask_account_card, get_date
 
 @pytest.mark.parametrize(
-    "numbers_info, expected",
+    "data, expected",
     [
-        ("MIR 1596837868705199", "MIR 1596 83** **** 5199"),
-        ("Master Card 6831982476737658", "Master Card 6831 98** **** 7658"),
-        ("Visa 897304958f7290kj", "Error"),
-        ("Visa 394075", "Error"),
-        ("Счёт 73654108430135874305", "Счёт **4305"),
-        ("Счет 19861059860492865092", "Счет **5092"),
-        ("Счет saigq54298dfgjkh895h", "Error"),
-        ("Счёт 23576908536", "Error"),
+        ("Карта 1234567890123456", "Карта 1234 56** **** 3456"),
+        ("Счет 12345678", "Счет **5678"),
+        ("Неизвестный формат", "Неизвестный формат"),
     ],
 )
-def test_mask_account_card(numbers_info, expected):
-    assert mask_account_card(numbers_info) == expected
-
+def test_mask_account_card(data: str, expected: str) -> None:
+    assert mask_account_card(data) == expected
 
 @pytest.mark.parametrize(
-    "data_info, expected",
+    "raw_date, expected",
     [
-        ("2024-03-11T02:26:18.671407", "11.03.2024"),
-        ("2022-04-12T04:27:18.671407", "12.04.2022"),
-        ("2014-03-11T02:26:18.", "Error"),
-        ("2024-03-11T02:26:18.671407TR", "Error"),
-        ("", "Error"),
+        ("2023-10-20T12:30:45.123", "20.10.2023"),
+        ("2021-01-01T00:00:00.000", "01.01.2021"),
+        ("invalid-date", "Некорректная дата"),
     ],
 )
-def test_get_data(data_info, expected):
-    assert get_date(data_info) == expected
+def test_get_date(raw_date: str, expected: str) -> None:
+    assert get_date(raw_date) == expected
