@@ -31,7 +31,7 @@ def test_log_to_file(tmp_path):
     assert result == 3
 
 
-def test_log_error_to_console(capsys):
+def test_log_error_to_console (capsys):
 
 
     @log()

@@ -6,11 +6,10 @@ import functools
 
 def log(filename: Optional[str] = None) -> Callable:
 
-
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-
+            # Формируем сообщение для лога
             func_name = func.__name__
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log_message = f"[{timestamp}] {func_name}"
