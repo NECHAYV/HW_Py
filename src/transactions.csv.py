@@ -15,8 +15,8 @@ handler.setFormatter(logging.Formatter(
 logger.addHandler(handler)
 
 
-def read_csv_file(file_path: str) -> List[Dict]:
-    
+def read_csv_file (file_path: str) -> List[Dict]:
+
     try:
         logger.debug(f'Попытка чтения CSV файла: {file_path}')
         df = pd.read_csv(file_path)
