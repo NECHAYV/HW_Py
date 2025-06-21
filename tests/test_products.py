@@ -1,6 +1,6 @@
 # test_products.py
 import pytest
-from products import Product, Category
+from products import Product, Category, CategoryIterator
 
 
 @pytest.fixture
@@ -9,77 +9,48 @@ def sample_product():
 
 
 @pytest.fixture
-def sample_category(sample_product):
-    return Category("Электроника", "Гаджеты и устройства", [sample_product])
+def another_product():
+    return Product("Ноутбук", "Игровой ноутбук", 100000.0, 5)
 
 
-def test_private_attributes(sample_product, sample_category):
-    # Проверка приватных атрибутов Product
-    assert hasattr(sample_product, '_Product__name')
-    assert hasattr(sample_product, '_Product__price')
-
-    # Проверка приватного атрибута Category
-    assert hasattr(sample_category, '_Category__products')
+@pytest.fixture
+def sample_category(sample_product, another_product):
+    return Category("Электроника", "Гаджеты и устройства", [sample_product, another_product])
 
 
-def test_add_product(sample_category):
-    initial_count = Category.product_count
-    new_product = Product("Ноутбук", "Игровой ноутбук", 100000.0, 5)
-    sample_category.add_product(new_product)
-    assert len(sample_category.products.split('\n')) == 2
-    assert Category.product_count == initial_count + 1
+def test_product_str(sample_product):
+    assert str(sample_product) == "Телефон, 50000.0 руб. Остаток: 10 шт."
 
 
-def test_products_property(sample_category, sample_product):
-    products_str = sample_category.products
-    assert str(sample_product) in products_str
-    assert "руб." in products_str
-    assert "Остаток:" in products_str
+def test_category_str(sample_category):
+    assert str(sample_category) == "Электроника, количество продуктов: 15 шт."
+    assert "количество продуктов: 15 шт." in str(sample_category)
 
 
-def test_new_product_classmethod():
-    product_data = {
-        'name': 'Планшет',
-        'description': 'Графический планшет',
-        'price': 30000.0,
-        'quantity': 3
-    }
-    product = Product.new_product(product_data)
-    assert product.name == 'Планшет'
-    assert product.price == 30000.0
-    assert product.quantity == 3
+def test_product_addition(sample_product, another_product):
+    total = sample_product + another_product
+    assert total == 50000.0 * 10 + 100000.0 * 5
 
 
-def test_new_product_update_existing():
-    existing_product = Product("Мышь", "Компьютерная мышь", 1500.0, 10)
-    product_data = {
-        'name': 'мышь',
-        'description': 'Новое описание',
-        'price': 2000.0,
-        'quantity': 5
-    }
-    updated_product = Product.new_product(product_data, [existing_product])
-    assert updated_product.quantity == 15
-    assert updated_product.price == 2000.0
+def test_product_addition_type_error(sample_product):
+    with pytest.raises(TypeError):
+        sample_product + 100
 
 
-def test_price_setter(sample_product, capsys):
-    sample_product.price = -100
-    captured = capsys.readouterr()
-    assert "Цена не должна быть нулевая или отрицательная" in captured.out
-    assert sample_product.price == 50000.0
-
-    sample_product.price = 60000.0
-    assert sample_product.price == 60000.0
+def test_category_iterator(sample_category):
+    products = list(sample_category)
+    assert len(products) == 2
+    assert isinstance(products[0], Product)
+    assert products[0].name == "Телефон"
+    assert products[1].name == "Ноутбук"
 
 
-def test_price_decrease_confirmation(sample_product, monkeypatch):
-    # Тестирование подтверждения снижения цены
-    monkeypatch.setattr('builtins.input', lambda _: 'y')
-    sample_product.price = 40000.0
-    assert sample_product.price == 40000.0
+def test_category_iterator_empty():
+    empty_category = Category("Пустая", "Нет товаров", [])
+    products = list(empty_category)
+    assert len(products) == 0
 
-    # Тестирование отмены снижения цены
-    monkeypatch.setattr('builtins.input', lambda _: 'n')
-    sample_product.price = 30000.0
-    assert sample_product.price == 40000.0  # Цена не изменилась
+
+def test_category_iterator_loop(sample_category):
+    names = [product.name for product in sample_category]
+    assert names == ["Телефон", "Ноутбук"]

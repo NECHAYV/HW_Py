@@ -1,12 +1,61 @@
+# products.py
 class Product:
-
-
     def __init__(self, name: str, description: str, price: float, quantity: int):
-
-        self.name = name
-        self.description = description
-        self.price = price
+        self.__name = name
+        self.__description = description
+        self.__price = price
         self.quantity = quantity
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @property
+    def description(self) -> str:
+        return self.__description
+
+    @property
+    def price(self) -> float:
+        return self.__price
+
+    @price.setter
+    def price(self, new_price: float):
+        if new_price <= 0:
+            print("Цена не должна быть нулевая или отрицательная")
+        else:
+            if new_price < self.__price:
+                confirm = input(f"Цена снижается с {self.__price} до {new_price}. Подтвердите (y/n): ")
+                if confirm.lower() != 'y':
+                    print("Изменение цены отменено")
+                    return
+            self.__price = new_price
+
+    def __add__(self, other):
+        if not isinstance(other, Product):
+            raise TypeError("Можно складывать только объекты Product")
+        return self.price * self.quantity + other.price * other.quantity
+
+    def __str__(self):
+        return f"{self.__name}, {self.__price} руб. Остаток: {self.quantity} шт."
+
+    @classmethod
+    def new_product(cls, product_data: dict, products: list = None):
+
+        if products:
+            for product in products:
+                if product.name.lower() == product_data['name'].lower():
+                    # Обновляем существующий продукт
+                    product.quantity += product_data['quantity']
+                    if product_data['price'] > product.price:
+                        product.price = product_data['price']
+                    return product
+
+        return cls(
+            name=product_data['name'],
+            description=product_data['description'],
+            price=product_data['price'],
+            quantity=product_data['quantity']
+        )
 
 
 class Category:
@@ -15,45 +64,47 @@ class Category:
     product_count = 0
 
     def __init__(self, name: str, description: str, products: list):
-
         self.name = name
         self.description = description
-        self.products = products
+        self.__products = products
 
         Category.category_count += 1
         Category.product_count += len(products)
 
     def add_product(self, product: Product):
 
-        self.products.append(product)
+        self.__products.append(product)
         Category.product_count += 1
 
+    @property
+    def products(self) -> str:
 
-def load_from_json(file_path: str) -> list:
+        return "\n".join(str(product) for product in self.__products)
 
-    import json
-    from typing import List, Dict
+    def __str__(self):
+        total_quantity = sum(product.quantity for product in self.__products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
 
-    with open(file_path, 'r', encoding='utf-8') as file:
-        data = json.load(file)
+    def __len__(self):
+        return len(self.__products)
 
-    categories = []
-    for category_data in data:
-        products = []
-        for product_data in category_data['products']:
-            product = Product(
-                name=product_data['name'],
-                description=product_data['description'],
-                price=product_data['price'],
-                quantity=product_data['quantity']
-            )
-            products.append(product)
+    def __iter__(self):
+        return CategoryIterator(self.__products)
 
-        category = Category(
-            name=category_data['name'],
-            description=category_data['description'],
-            products=products
-        )
-        categories.append(category)
 
-    return categories
+class CategoryIterator:
+
+
+    def __init__(self, products: list):
+        self.products = products
+        self.index = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index < len(self.products):
+            product = self.products[self.index]
+            self.index += 1
+            return product
+        raise StopIteration
