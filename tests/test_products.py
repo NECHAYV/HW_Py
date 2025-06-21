@@ -13,68 +13,73 @@ def sample_category(sample_product):
     return Category("Электроника", "Гаджеты и устройства", [sample_product])
 
 
-def test_product_init(sample_product):
-    assert sample_product.name == "Телефон"
-    assert sample_product.description == "Смартфон"
-    assert sample_product.price == 50000.0
-    assert sample_product.quantity == 10
+def test_private_attributes(sample_product, sample_category):
+    # Проверка приватных атрибутов Product
+    assert hasattr(sample_product, '_Product__name')
+    assert hasattr(sample_product, '_Product__price')
 
-
-def test_category_init(sample_category, sample_product):
-    assert sample_category.name == "Электроника"
-    assert sample_category.description == "Гаджеты и устройства"
-    assert len(sample_category.products) == 1
-    assert sample_category.products[0] == sample_product
-
-
-def test_category_count():
-    initial_count = Category.category_count
-    category = Category("Тест", "Тестовая категория", [])
-    assert Category.category_count == initial_count + 1
-
-
-def test_product_count():
-    initial_count = Category.product_count
-    product = Product("Тест", "Тестовый продукт", 100.0, 5)
-    category = Category("Тест", "Тестовая категория", [product])
-    assert Category.product_count == initial_count + 1
+    # Проверка приватного атрибута Category
+    assert hasattr(sample_category, '_Category__products')
 
 
 def test_add_product(sample_category):
     initial_count = Category.product_count
     new_product = Product("Ноутбук", "Игровой ноутбук", 100000.0, 5)
     sample_category.add_product(new_product)
-    assert len(sample_category.products) == 2
+    assert len(sample_category.products.split('\n')) == 2
     assert Category.product_count == initial_count + 1
 
 
-def test_load_from_json(tmp_path):
-    import json
-    import os
-    from products import load_from_json
+def test_products_property(sample_category, sample_product):
+    products_str = sample_category.products
+    assert str(sample_product) in products_str
+    assert "руб." in products_str
+    assert "Остаток:" in products_str
 
-    # Создаем временный JSON файл
-    data = [
-        {
-            "name": "Электроника",
-            "description": "Гаджеты",
-            "products": [
-                {
-                    "name": "Телефон",
-                    "description": "Смартфон",
-                    "price": 50000.0,
-                    "quantity": 10
-                }
-            ]
-        }
-    ]
 
-    file_path = os.path.join(tmp_path, "test.json")
-    with open(file_path, 'w', encoding='utf-8') as file:
-        json.dump(data, file)
+def test_new_product_classmethod():
+    product_data = {
+        'name': 'Планшет',
+        'description': 'Графический планшет',
+        'price': 30000.0,
+        'quantity': 3
+    }
+    product = Product.new_product(product_data)
+    assert product.name == 'Планшет'
+    assert product.price == 30000.0
+    assert product.quantity == 3
 
-    categories = load_from_json(file_path)
-    assert len(categories) == 1
-    assert categories[0].name == "Электроника"
-    assert len(categories[0].products) == 1
-    assert categories[0].products[0].name == "Телефон"
+
+def test_new_product_update_existing():
+    existing_product = Product("Мышь", "Компьютерная мышь", 1500.0, 10)
+    product_data = {
+        'name': 'мышь',
+        'description': 'Новое описание',
+        'price': 2000.0,
+        'quantity': 5
+    }
+    updated_product = Product.new_product(product_data, [existing_product])
+    assert updated_product.quantity == 15
+    assert updated_product.price == 2000.0
+
+
+def test_price_setter(sample_product, capsys):
+    sample_product.price = -100
+    captured = capsys.readouterr()
+    assert "Цена не должна быть нулевая или отрицательная" in captured.out
+    assert sample_product.price == 50000.0
+
+    sample_product.price = 60000.0
+    assert sample_product.price == 60000.0
+
+
+def test_price_decrease_confirmation(sample_product, monkeypatch):
+    # Тестирование подтверждения снижения цены
+    monkeypatch.setattr('builtins.input', lambda _: 'y')
+    sample_product.price = 40000.0
+    assert sample_product.price == 40000.0
+
+    # Тестирование отмены снижения цены
+    monkeypatch.setattr('builtins.input', lambda _: 'n')
+    sample_product.price = 30000.0
+    assert sample_product.price == 40000.0  # Цена не изменилась
