@@ -1,26 +1,36 @@
-# Банковские транзакции
+Управление продуктами и категориями
 
-## Новые функции:
+Классы
 
-### Поиск транзакций
-- `search_by_description(transactions, search_str)` - поиск по описанию (с использованием regex)
-- `filter_by_status(transactions, status)` - фильтрация по статусу
-- `filter_by_currency(transactions, currency)` - фильтрация по валюте
+Product
+Представляет товар в магазине.
 
-### Анализ транзакций
-- `count_by_category(transactions, categories)` - подсчет операций по категориям
-- `sort_transactions(transactions, reverse)` - сортировка по дате
+Атрибуты:
+name - название товара
+description - описание товара
+price - цена товара
+quantity - количество в наличии
 
-### Основной интерфейс
-Запуск: `python main.py`
+Category
+Представляет категорию товаров.
 
-Программа предоставляет интерактивный интерфейс для:
-1. Выбора источника данных (JSON/CSV/XLSX)
-2. Фильтрации по статусу
-3. Сортировки по дате
-4. Дополнительной фильтрации
-5. Вывода результатов
+Атрибуты класса:
+category_count - общее количество категорий
+product_count - общее количество товаров
 
-## Тестирование
-```bash
-pytest --cov=operations --cov-report=html
+Атрибуты экземпляра:
+name - название категории
+description - описание категории 
+products - список товаров в категории
+
+Методы:**
+add_product(product)` - добавляет товар в категорию
+
+Дополнительные функции
+
+`load_from_json(file_path)`
+Загружает данные из JSON файла и создает объекты Category и Product.
+
+Тестирование
+bash
+pytest --cov=products --cov-report=html
