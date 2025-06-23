@@ -1,31 +1,38 @@
-# test_file_reader.py
 import pytest
 from unittest.mock import patch, mock_open
 import pandas as pd
-from file_reader import read_csv_file, read_excel_file
+from src.file_reader import read_csv, write_csv, read_excel, write_excel
 
-@pytest.fixture
-def sample_csv_data():
-    return """id,amount,currency
-1,100,USD
-2,200,EUR
-3,300,GBP"""
 
-@pytest.fixture
-def sample_excel_data(tmp_path):
-    df = pd.DataFrame({
-        'id': [1, 2, 3],
-        'amount': [100, 200, 300],
-        'currency': ['USD', 'EUR', 'GBP']
-    })
-    file_path = tmp_path / "test.xlsx"
-    df.to_excel(file_path, index=False)
-    return file_path
+# Тесты для CSV
+def test_read_csv_with_reader():
+    csv_content = """name;age
+Alice;30
+Bob;25"""
 
-def test_read_csv_file_success(sample_csv_data):
+    with patch('builtins.open', mock_open(read_data=csv_content)):
+        result = read_csv("dummy.csv", use_pandas=False)
+        assert len(result) == 2
+        assert result[0]["name"] == "Alice"
 
-    with patch('builtins.open', mock_open(read_data=sample_csv_data)):
-        with patch('pandas.read_csv') as mock_read_csv:
-            mock_read_csv.return_value = pd.DataFrame({
-                'id': [1, 2],
-                'amount':
+
+@patch('pandas.read_csv')
+def test_read_csv_with_pandas(mock_read):
+    mock_read.return_value = pd.DataFrame([{"name": "Alice", "age": 30}])
+    result = read_csv("dummy.csv", use_pandas=True)
+    assert len(result) == 1
+
+
+# Тесты для Excel
+@patch('pandas.read_excel')
+def test_read_excel(mock_read):
+    mock_read.return_value = pd.DataFrame([{"id": 1, "value": 100}])
+    result = read_excel("dummy.xlsx")
+    assert result[0]["id"] == 1
+
+
+@patch('pandas.DataFrame.to_excel')
+def test_write_excel(mock_write):
+    data = [{"id": 1}, {"id": 2}]
+    write_excel("output.xlsx", data)
+    mock_write.assert_called_once()
