@@ -23,7 +23,7 @@ def sample_excel_data(tmp_path):
     return file_path
 
 def test_read_csv_file_success(sample_csv_data):
-    
+
     with patch('builtins.open', mock_open(read_data=sample_csv_data)):
         with patch('pandas.read_csv') as mock_read_csv:
             mock_read_csv.return_value = pd.DataFrame({
