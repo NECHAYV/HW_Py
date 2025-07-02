@@ -1,24 +1,45 @@
 import pytest
-from src.widget import mask_account_card, get_date
-
+from src.widget import get_date, mask_account_card
 @pytest.mark.parametrize(
-    "data, expected",
+    "numbers_info, expected",
     [
-        ("Карта 1234567890123456", "Карта 1234 56** **** 3456"),
-        ("Счет 12345678", "Счет **5678"),
-        ("Неизвестный формат", "Неизвестный формат"),
+        ("MIR 1596837868705199", "MIR 1596 83** **** 5199"),
+        ("Master Card 6831982476737658", "Master Card 6831 98** **** 7658"),
+        ("Visa 897304958f7290kj", "Error"),
+        ("Visa 394075", "Error"),
+        ("Счёт 73654108430135874305", "Счёт **4305"),
+        ("Счет 19861059860492865092", "Счет **5092"),
+        ("Счет saigq54298dfgjkh895h", "Error"),
+        ("Счёт 23576908536", "Error"),
     ],
 )
-def test_mask_account_card(data: str, expected: str) -> None:
-    assert mask_account_card(data) == expected
-
+def test_mask_account_card(numbers_info, expected):
+    assert mask_account_card(numbers_info) == expected
 @pytest.mark.parametrize(
-    "raw_date, expected",
+    "data_info, expected",
     [
-        ("2023-10-20T12:30:45.123", "20.10.2023"),
-        ("2021-01-01T00:00:00.000", "01.01.2021"),
-        ("invalid-date", "Некорректная дата"),
+        ("2024-03-11T02:26:18.671407", "11.03.2024"),
+        ("2022-04-12T04:27:18.671407", "12.04.2022"),
+        ("2014-03-11T02:26:18.", "Error"),
+        ("2024-03-11T02:26:18.671407TR", "Error"),
+        ("", "Error"),
     ],
 )
-def test_get_date(raw_date: str, expected: str) -> None:
-    assert get_date(raw_date) == expected
+def test_get_data(data_info, expected):
+    assert get_date(data_info) == expected
+
+
+@pytest.mark.parametrize(
+    "data_info, expected",
+    [
+        ("2024-03-11T02:26:18.671407", "11.03.2024"),
+        ("2022-04-12T04:27:18.671407", "12.04.2022"),
+        ("2014-03-11T02:26:18.", "Error"),  # теперь вернет "Error"
+        ("2024-03-11T02:26:18.671407TR", "Error"),
+        ("", "Error"),
+        ("12345", "Error"),  # случай короткой строки
+        ("123456789012345678901234567890", "Error"),  # слишком длинная строка
+    ],
+)
+def test_get_data(data_info, expected):
+    assert get_date(data_info) == expected
